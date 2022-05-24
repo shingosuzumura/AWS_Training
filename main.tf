@@ -5,57 +5,63 @@ terraform {
       version = "~> 3.27"
     }
   }
+    backend "s3" {
+    bucket = "remote-backend-suzumura"
+    key    = "terraform/terraform.tfs"
+    region = "us-east-1"
+  }
+
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
 }
 
 resource "aws_vpc" "terraform" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.cidr_block
   enable_dns_hostnames = "true"
   enable_dns_support = "true"
   instance_tenancy = "default"
   assign_generated_ipv6_cidr_block = "false"
 
   tags = {
-    "Name" = "terraform_vpc"
+    "Name" = "terraform-${terraform.workspace}-vpc"
   }
 }
 
 resource "aws_subnet" "terraform-publicsubnet-1-a" {
   vpc_id = aws_vpc.terraform.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
+  cidr_block = var.public_subnet_1_a_cidr_block
+  availability_zone = var.AZ_1_a
   assign_ipv6_address_on_creation = "false"
   map_public_ip_on_launch = "true"
 
   tags = {
-    "Name" = "terraform-publicsubnet-1-a"
+    "Name" = "terraform-${terraform.workspace}-publicsubnet-1-a"
   }
 }
 
 resource "aws_subnet" "terraform-privatesubnet-1-a" {
   vpc_id = aws_vpc.terraform.id
-  cidr_block = "10.0.2.0/24"
-  availability_zone = "us-east-1a"
+  cidr_block = var.private_subnet_1_a_cidr_block
+  availability_zone = var.AZ_1_a
   assign_ipv6_address_on_creation = "false"
   map_public_ip_on_launch = "false"
 
   tags = {
-    "Name" = "terraform-privatesubnet-1"
+    "Name" = "terraform-${terraform.workspace}-privatesubnet-1"
   }
 }
 
 resource "aws_subnet" "terraform-privatesubnet-1-c" {
   vpc_id = aws_vpc.terraform.id
-  cidr_block = "10.0.4.0/24"
-  availability_zone = "us-east-1c"
+  cidr_block = var.private_subnet_1_c_cidr_block
+  availability_zone = var.AZ_1_c
   assign_ipv6_address_on_creation = "false"
   map_public_ip_on_launch = "false"
 
   tags = {
-    "Name" = "terraform-publicsubnet-1-c"
+    "Name" = "terraform-${terraform.workspace}-publicsubnet-1-c"
   }
 }
 
@@ -63,7 +69,7 @@ resource "aws_internet_gateway" "terraform_igw" {
   vpc_id = aws_vpc.terraform.id
 
   tags = {
-    "Name" = "terraform_igw"
+    "Name" = "terraform-${terraform.workspace}-igw"
   }
 }
 
@@ -76,7 +82,7 @@ resource "aws_route_table" "terraform_rtb" {
   }
 
   tags = {
-    "Name" = "terraform_rtb"
+    "Name" = "terraform-${terraform.workspace}-rtb"
   }
 }
 
